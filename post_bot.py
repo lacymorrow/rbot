@@ -37,6 +37,7 @@ import subs
 
 # check hottest posts of all-time, repost as new
 ########### Paraphrase
+########### Change ownership
 
 # random subreddits
 
@@ -54,6 +55,7 @@ SEARCH_LIMIT = 50 # Posts within subs that  are searched Max 1000
 AGE_THRESHOLD = 30 # Default 365 days (considered a month)
 EXECUTION_TOTAL = 500 # TOTAL APPLICATION RUN COUNT
 BANNED_WORDS = ['[OC]', 'hello']
+
 # ACTIVE_SUBS = ['test']
 ACTIVE_SUBS = subs.most_subscribed_subs # ['test', 'me_irl', 'lgbqt',] # 'askreddit', 'askwomen', 'askmen'] 
 
