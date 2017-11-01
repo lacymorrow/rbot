@@ -52,7 +52,7 @@ SEND_FLAG = True
 SORT_DATE = 'month' # 'week', 'month', etc. via reddit
 POST_DELAY = 10 # seconds ; 600 === 10 mins
 SEARCH_LIMIT = 50 # Posts within subs that  are searched Max 1000
-AGE_THRESHOLD = 25 # Default 25 days (considered a month); 20-25 is active
+AGE_THRESHOLD = 30 # Default 25 days (considered a month); 20-25 is active
 EXECUTION_TOTAL = 500 # TOTAL APPLICATION RUN COUNT
 BANNED_WORDS = ['[OC]', 'OC', 'test']
 
@@ -64,17 +64,28 @@ ACTIVE_SUBS = subs.most_subscribed_subs
 # NEWS SUBS
 NEWS_SUBS = ['usanews', 'worldnews', 'poitics', 'neutralpolitics', 'unceensorednews']
 
+NO_REPOST_SUBS = ['nottheonion', 'personalfinance']
+
+# 'trees' = 1 karman
 # 'Futurology' = 5 day old 
-# 'technology' = 5 daays old
+# 'technology' = 5 days old
 # 'youtubehaiku' = 5 daays old
-BANNED_SUBS = ['pics', 'gifs', 'nosleep', 'bodyweightfitness', 'overwatch', 'hearthstone', 'tattoos', 'pokemon', 'futurology', 'technology', 'worldnews', 'youtubehaiku']
+
+WAIT_SUBS = ['trees']
+
+BANNED_SUBS = ['pics', 'gifs', 'nosleep', 'bodyweightfitness', 'CrappyDesign', 'Overwatch', 
+'personalfinance' #trolling/plagarism
+'hearthstone', 'tattoos', 'pokemon', 'futurology', 'technology', 'worldnews', 'youtubehaiku'] + WAIT_SUBS
 
 preface = ''
 
 
 # Skip banned subs
-working_active_subs = [x for x in ACTIVE_SUBS if x not in BANNED_SUBS]
-working_news_subs = [x for x in NEWS_SUBS if x not in BANNED_SUBS]
+was = [x.lower() for x in ACTIVE_SUBS]
+wns = [x.lower() for x in NEWS_SUBS]
+wbs = [x.lower() for x in BANNED_SUBS]
+working_active_subs = [x for x in was if x not in wbs]
+working_news_subs = [x for x in was if x not in wbs]
 
 
 # Other Subs to consider to widen the net
@@ -106,7 +117,7 @@ def run_bot(r):
     active_sub = random.choice(working_active_subs) 
     news_sub = random.choice(working_news_subs)
 
-    print '\n RUNNING #1 \n'
+    print '\n ** RUNNING **\n'
     print 'TARGETING ACTIVE SUB: ' + active_sub
     print 'TARGETING NEWS SUB: ' + news_sub
 
@@ -122,6 +133,7 @@ def run_bot(r):
             # check if post is old enough to warrant a repost (don't repost brand new posts, better for xposts)
             if(int(post.age.days) > AGE_THRESHOLD):
                 post = restyle_post(post)
+                print post.shortlink
                 posts.append(post)
 
 
@@ -177,27 +189,29 @@ def create_posts(r, posts):
             print "#####" + str(post.author)
 
 
+        # We've been banned
+        except APIException.PRAW as e:
+            s = str(e)
+            print "APIException PRAW: " + s
+            if "SUBREDDIT_NOTALLOWED: 'you aren't allowed to post there.'" in s:
+                print "Private Sub"
+            next_post_delay = int(filter(str.isdigit, s))
+            if not str(next_post_delay.isdigit()):
+                exit(1)
+            sleep(next_post_delay)
+
+
+        # Auto Sleep the delay provided
         except praw.exceptions.APIException as e:
             s = str(e)
             print "APIException PRAW: " + s
             if "SUBREDDIT_NOTALLOWED" in s:
                 print "Private Sub"
-                coninue;
             next_post_delay = int(filter(str.isdigit, s))
             if not str(type(next_post_delay) is int):
                 exit(1)
             sleep(next_post_delay)
 
-        except APIException.PRAW as e:
-            s = str(e)
-            print "APIException PRAW: " + s
-            if "SUBREDDIT_NOTALLOWED" in s:
-                print "Private Sub"
-                coninue;
-            next_post_delay = int(filter(str.isdigit, s))
-            if not str(next_post_delay.isdigit()):
-                exit(1)
-            sleep(next_post_delay)
 
         except AttributeError as e:
             print "AttributeError: " + str(e)
@@ -206,9 +220,11 @@ def create_posts(r, posts):
         except AssertionError as e:
             print "AssertionError: " + str(e)
             exit(1)
+
         except Exception as e:
             print "Error" + e
             exit(1)
+
         except:
             print "Uncaught Error"
             exit(1)
