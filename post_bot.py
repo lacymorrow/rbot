@@ -9,13 +9,15 @@
 
 
 import os
+import time
+import datetime
+import random
+import requests
+
+# Required in requirements.txt
+import gensim
 import nltk
 import praw
-import time
-import gensim
-import random
-import datetime
-import requests
 nltk.download('punkt')
 
 # import configuration files
